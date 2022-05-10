@@ -16,16 +16,63 @@ const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
 const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
+// import { uploadBytes, ref } from "firebase/storage";
 const storage_1 = require("firebase-admin/storage");
-(0, app_1.initializeApp)({
+const firebaseApp = (0, app_1.initializeApp)({
     credential: (0, app_1.applicationDefault)(),
     storageBucket: "markr-7d6ab.appspot.com",
 });
+const PORT = 3000;
+const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";
 const app = (0, express_1.default)();
-const port = 3000;
 const db = (0, firestore_1.getFirestore)();
-const bucket = (0, storage_1.getStorage)().bucket;
-app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const bucket = (0, storage_1.getStorage)().bucket();
+const bgsGalleryRef = db
+    .collection("Users")
+    .doc(USER_DOCUMENT_ID)
+    .collection("BGSs");
+function getBrandGuides(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const bgsGallerySnapshot = yield bgsGalleryRef.get();
+        const bgsGallery = [];
+        bgsGallerySnapshot.forEach((doc) => {
+            let data = doc.data();
+            bgsGallery.push(data);
+        });
+        res.send(bgsGallery);
+    });
+}
+function getBrandGuide(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const name = req.params.name.split("%20").join(" ");
+        const bgsRef = yield bgsGalleryRef.doc(name);
+        const bgsSnapshot = yield bgsRef.get();
+        const pagesSnapshot = yield bgsRef.collection("Pages").get();
+        const pages = [];
+        pagesSnapshot.forEach((doc) => {
+            pages.push(doc.data());
+        });
+        const bgsData = bgsSnapshot.data();
+        bgsData.pages = pages;
+        res.send(bgsData);
+    });
+}
+function uploadFile(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const originalName = req["file"].originalname;
+        const blob = req["file"].buffer;
+        bucket
+            .file(originalName)
+            .save(blob)
+            .then(() => {
+            res.sendStatus(200);
+        })
+            .catch(() => {
+            res.sendStatus(500);
+        });
+    });
+}
+app.get("/brandguides", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //   const docRef = db
     //     .collection("Users")
     //     .doc("XI3pHNcWUMDUuDcGlBpA")
@@ -39,24 +86,11 @@ app.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // },
     // { merge: true }
     // );
-    const snapshot = yield db.collection("Users").get();
-    snapshot.forEach((doc) => {
-        console.log(doc.id, "=>", doc.data());
-    });
-    res.sendStatus(200);
+    getBrandGuides(req, res);
 }));
-const storage_2 = require("@google-cloud/storage");
-function uploadFile(name, file) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield new storage_2.Storage().bucket("markr-7d6ab").file(name).save(file);
-    });
-}
-app.post("/", (0, multer_1.default)().single("file"), function (req, res) {
-    const originalName = req["file"].originalname;
-    uploadFile(originalName, req["file"]);
-    res.sendStatus(200);
-});
-app.listen(port, () => {
-    return console.log(`Express is listening at http://localhost:${port}`);
+app.get("/brandguides/:name", (req, res) => __awaiter(void 0, void 0, void 0, function* () { return getBrandGuide(req, res); }));
+app.post("/upload", (0, multer_1.default)().single("file"), (req, res) => __awaiter(void 0, void 0, void 0, function* () { return uploadFile(req, res); }));
+app.listen(PORT, () => {
+    return console.log(`Express is listening at http://localhost:${PORT}`);
 });
 //# sourceMappingURL=app.js.map
