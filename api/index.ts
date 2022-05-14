@@ -53,7 +53,7 @@ async function getBrandGuide(req, res) {
   });
   const bgsData = bgsSnapshot.data();
   bgsData.pages = pages;
-
+  res.setHeader("Content-Type", "application/json");
   res.send(bgsData);
 }
 
