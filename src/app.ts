@@ -71,7 +71,7 @@ async function uploadFile(req, res) {
     });
 }
 
-app.get("/brandguides", async (req, res) => {
+app.get("/api/brandguides", async (req, res) => {
   //   const docRef = db
   //     .collection("Users")
   //     .doc("XI3pHNcWUMDUuDcGlBpA")
@@ -88,9 +88,9 @@ app.get("/brandguides", async (req, res) => {
   getBrandGuides(req, res);
 });
 
-app.get("/brandguides/:name", async (req, res) => getBrandGuide(req, res));
+app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
 
-app.post("/upload", multer().single("file"), async (req, res) =>
+app.post("/api/upload", multer().single("file"), async (req, res) =>
   uploadFile(req, res)
 );
 
