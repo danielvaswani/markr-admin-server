@@ -85,9 +85,10 @@ app.get("/api/brandguides", async (req, res) => {
   // },
   // { merge: true }
   // );
-  console.log(process.env.FIREBASE_PRIVATE_KEY);
   getBrandGuides(req, res);
 });
+
+app.get("/api/hello", (req, res) => res.send("Hello world"));
 
 app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
 
