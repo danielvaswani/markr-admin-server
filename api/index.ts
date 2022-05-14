@@ -85,12 +85,6 @@ app.get("/api/brandguides", async (req, res) => {
   // },
   // { merge: true }
   // );
-  getBrandGuides(req, res);
-});
-
-app.get("/api/hello", (req, res) => res.send("Hello world"));
-
-app.get("/api/brandguides/:name", async (req, res) => {
   const bgsGallerySnapshot = await bgsGalleryRef.get();
   const bgsGallery = [];
 
@@ -100,6 +94,10 @@ app.get("/api/brandguides/:name", async (req, res) => {
   });
   res.send(bgsGallery);
 });
+
+app.get("/api/hello", (req, res) => res.send("Hello world"));
+
+app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
 
 app.post("/api/upload", multer().single("file"), async (req, res) =>
   uploadFile(req, res)
