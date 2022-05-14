@@ -2,14 +2,17 @@ import express from "express";
 import multer from "multer";
 import "dotenv/config";
 
-import { applicationDefault, initializeApp } from "firebase-admin/app";
+import { applicationDefault, cert, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import admin from "firebase-admin";
 // import { uploadBytes, ref } from "firebase/storage";
 import { getStorage } from "firebase-admin/storage";
 
 const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
-const firebaseApp = initializeApp(firebaseConfig);
+const firebaseApp = initializeApp({
+  credential: cert(firebaseConfig),
+  storageBucket: process.env.STORAGE_BUCKET,
+});
 
 const PORT = 3000;
 const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";
