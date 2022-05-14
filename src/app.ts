@@ -97,3 +97,5 @@ app.post("/upload", multer().single("file"), async (req, res) =>
 app.listen(PORT, () => {
   return console.log(`Express is listening at http://localhost:${PORT}`);
 });
+
+module.exports = app;
