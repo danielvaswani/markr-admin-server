@@ -90,7 +90,16 @@ app.get("/api/brandguides", async (req, res) => {
 
 app.get("/api/hello", (req, res) => res.send("Hello world"));
 
-app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
+app.get("/api/brandguides/:name", async (req, res) => {
+  const bgsGallerySnapshot = await bgsGalleryRef.get();
+  const bgsGallery = [];
+
+  bgsGallerySnapshot.forEach((doc) => {
+    let data = doc.data();
+    bgsGallery.push(data);
+  });
+  res.send(bgsGallery);
+});
 
 app.post("/api/upload", multer().single("file"), async (req, res) =>
   uploadFile(req, res)
