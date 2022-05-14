@@ -8,14 +8,8 @@ import admin from "firebase-admin";
 // import { uploadBytes, ref } from "firebase/storage";
 import { getStorage } from "firebase-admin/storage";
 
-const firebaseApp = initializeApp({
-  credential: admin.credential.cert({
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    projectId: process.env.FIREBASE_PROJECT_ID,
-  }),
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-});
+const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+const firebaseApp = initializeApp(firebaseConfig);
 
 const PORT = 3000;
 const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";
