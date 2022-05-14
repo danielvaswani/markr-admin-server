@@ -11,7 +11,7 @@ import { getStorage } from "firebase-admin/storage";
 const firebaseApp = initializeApp({
   credential: admin.credential.cert({
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY,
+    privateKey: JSON.parse(process.env.FIREBASE_PRIVATE_KEY).privateKey,
     projectId: process.env.FIREBASE_PROJECT_ID,
   }),
   storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
