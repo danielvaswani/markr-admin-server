@@ -16,9 +16,9 @@
   "name": "markr-admin-server",
   "version": "1.0.0",
   "description": "This is the markr admin server",
-  "main": "api/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "tsc && node api/index.js",
+    "start": "tsc && node dist/index.js",
     "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
