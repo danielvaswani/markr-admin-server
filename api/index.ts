@@ -8,8 +8,6 @@ import admin from "firebase-admin";
 // import { uploadBytes, ref } from "firebase/storage";
 import { getStorage } from "firebase-admin/storage";
 
-console.log(process.env.FIREBASE_PRIVATE_KEY);
-
 const firebaseApp = initializeApp({
   credential: admin.credential.cert({
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
@@ -87,6 +85,7 @@ app.get("/api/brandguides", async (req, res) => {
   // },
   // { merge: true }
   // );
+  console.log(process.env.FIREBASE_PRIVATE_KEY);
   getBrandGuides(req, res);
 });
 
