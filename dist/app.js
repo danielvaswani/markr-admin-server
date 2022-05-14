@@ -14,13 +14,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
+require("dotenv/config");
 const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
+const firebase_admin_1 = __importDefault(require("firebase-admin"));
 // import { uploadBytes, ref } from "firebase/storage";
 const storage_1 = require("firebase-admin/storage");
+console.log("private key is " + process.env.FIREBASE_PRIVATE_KEY);
 const firebaseApp = (0, app_1.initializeApp)({
-    credential: (0, app_1.applicationDefault)(),
-    storageBucket: "markr-7d6ab.appspot.com",
+    credential: firebase_admin_1.default.credential.cert({
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY,
+        projectId: process.env.FIREBASE_PROJECT_ID,
+    }),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
 });
 const PORT = 3000;
 const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";

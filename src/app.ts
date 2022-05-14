@@ -1,14 +1,20 @@
 import express from "express";
 import multer from "multer";
+import "dotenv/config";
 
 import { applicationDefault, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
+import admin from "firebase-admin";
 // import { uploadBytes, ref } from "firebase/storage";
 import { getStorage } from "firebase-admin/storage";
 
 const firebaseApp = initializeApp({
-  credential: applicationDefault(),
-  storageBucket: "markr-7d6ab.appspot.com",
+  credential: admin.credential.cert({
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+  }),
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
 });
 
 const PORT = 3000;
