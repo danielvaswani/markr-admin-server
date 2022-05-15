@@ -18,6 +18,7 @@ const PORT = 3000;
 const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";
 
 const app = express();
+app.use(express.json());
 const db = getFirestore();
 const bucket = getStorage().bucket();
 
@@ -185,6 +186,15 @@ app.post(
 );
 
 app.post("/api/brandguides/:bgsName/:pageName/upload/", async (req, res) => {
+  addAssetToDatabase(req.params.bgsName, req.params.pageName, {
+    content: req.body.content,
+    name: req.body.name,
+    type: req.body.type,
+  })
+    .then(() => res.sendStatus(200))
+    .catch(console.error);
+});
+
 app.listen(PORT, () => {
   return console.log(`Express is listening at http://localhost:${PORT}`);
 });
