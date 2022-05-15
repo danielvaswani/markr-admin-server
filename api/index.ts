@@ -83,7 +83,7 @@ async function getBrandGuides(req, res) {
   const bgsGallery = [];
 
   bgsGallerySnapshot.forEach((doc) => {
-    let data = doc.data();
+    const data = doc.data();
     bgsGallery.push(data);
   });
   res.send(bgsGallery);
