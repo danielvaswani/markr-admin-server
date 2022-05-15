@@ -112,10 +112,29 @@ interface Asset {
   type: string;
 }
 
+function createBlobAsset(fileName): Asset {
+  const fileNameSplit = fileName.split(".");
+  return {
+    content: {
+      format: fileNameSplit[1],
+      url:
+        "https://firebasestorage.googleapis.com/v0/b/" +
+        process.env.STORAGE_BUCKET +
+        "/o/" +
+        fileName +
+        "?alt=media",
+    },
+    name: fileNameSplit[0],
+    type: getTypeFromFormat(fileNameSplit[1]),
+  };
+}
+
     })
-    .catch(() => {
-      res.sendStatus(500);
-    });
+
+async function uploadFile(file) {
+  const originalName = file.originalname;
+  const blob = file.buffer;
+  bucket.file(originalName).save(blob);
 }
 
 app.get("/api/brandguides", async (req, res) => {
@@ -148,6 +167,21 @@ app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
 
 app.post(
   "/api/brandguides/:bgsName/:pageName/upload/blob",
+  multer().single("file"),
+  async (req, res) => {
+    uploadFile(req["file"])
+      .then(() => {
+        addAssetToDatabase(
+          req.params.bgsName,
+          req.params.pageName,
+          createBlobAsset(req["file"].originalname)
+        )
+          .then(() => res.sendStatus(200))
+          // TODO DELETE FILE IN CATCH IF DB REFERENCE FAILED
+          .catch(console.error);
+      })
+      .catch(console.error);
+  }
 );
 
 app.post("/api/brandguides/:bgsName/:pageName/upload/", async (req, res) => {
