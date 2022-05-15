@@ -188,10 +188,7 @@ app.get("/api/brandguides/:name/fonts", async (req, res) => {
     res.set("Content-Type", "text/css");
     res.send(fontsCss);
   });
-  res.send(bgsGallery);
 });
-
-app.get("/api/hello", (req, res) => res.send("Hello world"));
 
 app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
 
