@@ -156,7 +156,23 @@ function createBlobAsset(fileName): Asset {
   };
 }
 
+async function getFonts(bgsName) {
+  const allAssets = await getAssets(bgsName);
+  return allAssets.filter((asset) => asset.type === "font");
+}
+
+function getFontCSS(fonts) {
+  return fonts
+    .map((font) => {
+      const format =
+        ' format("' + getFullFormat(font.content.format, "font") + '")';
+      return `@font-face {
+  font-family: '${font.name}';
+  src: url("${font.content.url}")${format};
+}`;
     })
+    .join("\n");
+}
 
 async function uploadFile(file) {
   const originalName = file.originalname;
@@ -181,9 +197,11 @@ app.get("/api/brandguides", async (req, res) => {
   const bgsGallerySnapshot = await bgsGalleryRef.get();
   const bgsGallery = [];
 
-  bgsGallerySnapshot.forEach((doc) => {
-    let data = doc.data();
-    bgsGallery.push(data);
+app.get("/api/brandguides/:name/fonts", async (req, res) => {
+  const fonts = Promise.all(await getFonts(req.params.name)).then((fonts) => {
+    const fontsCss = getFontCSS(fonts);
+    res.set("Content-Type", "text/css");
+    res.send(fontsCss);
   });
   res.send(bgsGallery);
 });
