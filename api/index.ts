@@ -146,10 +146,11 @@ app.get("/api/hello", (req, res) => res.send("Hello world"));
 
 app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
 
-app.post("/api/upload", multer().single("file"), async (req, res) =>
-  uploadFile(req, res)
+app.post(
+  "/api/brandguides/:bgsName/:pageName/upload/blob",
 );
 
+app.post("/api/brandguides/:bgsName/:pageName/upload/", async (req, res) => {
 app.listen(PORT, () => {
   return console.log(`Express is listening at http://localhost:${PORT}`);
 });
