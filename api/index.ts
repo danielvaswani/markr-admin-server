@@ -180,22 +180,7 @@ async function uploadFile(file) {
   bucket.file(originalName).save(blob);
 }
 
-app.get("/api/brandguides", async (req, res) => {
-  //   const docRef = db
-  //     .collection("Users")
-  //     .doc("XI3pHNcWUMDUuDcGlBpA")
-  //     .collection("BGSs")
-  //     .doc("Johnny Walker")
-  //     .collection("Pages")
-  //     .doc("Typography");
-  // const response = await docRef.set(
-  // {
-  //     capital: true,
-  // },
-  // { merge: true }
-  // );
-  const bgsGallerySnapshot = await bgsGalleryRef.get();
-  const bgsGallery = [];
+app.get("/api/brandguides", async (req, res) => getBrandGuides(req, res));
 
 app.get("/api/brandguides/:name/fonts", async (req, res) => {
   const fonts = Promise.all(await getFonts(req.params.name)).then((fonts) => {
