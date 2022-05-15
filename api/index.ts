@@ -106,14 +106,12 @@ async function getBrandGuide(req, res) {
   res.send(bgsData);
 }
 
-async function uploadFile(req, res) {
-  const originalName = req["file"].originalname;
-  const blob = req["file"].buffer;
-  bucket
-    .file(originalName)
-    .save(blob)
-    .then(() => {
-      res.sendStatus(200);
+interface Asset {
+  content: any;
+  name: string;
+  type: string;
+}
+
     })
     .catch(() => {
       res.sendStatus(500);
