@@ -113,6 +113,32 @@ interface Asset {
   type: string;
 }
 
+async function getAssets(bgsName) {
+  const pagesRef = BGS_GALLERY_REF.doc(bgsName).collection("Pages");
+  const snapshot = await pagesRef.get();
+  const allAssets = [];
+  snapshot.forEach((doc) => {
+    console.log(doc.id, "=>", doc.data().Assets);
+    allAssets.push(...doc.data().Assets);
+  });
+  return allAssets;
+}
+
+async function addAssetToDatabase(
+  bgsName: string,
+  pageName: string,
+  asset: Asset
+) {
+  const assetRef = BGS_GALLERY_REF.doc(bgsName)
+    .collection("Pages")
+    .doc(pageName);
+
+  //add item to assets array inside, merge = true
+  return await assetRef.update({
+    Assets: FieldValue.arrayUnion(asset),
+  });
+}
+
 function createBlobAsset(fileName): Asset {
   const fileNameSplit = fileName.split(".");
   return {
