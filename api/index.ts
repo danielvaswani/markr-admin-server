@@ -22,7 +22,7 @@ app.use(express.json());
 const db = getFirestore();
 const bucket = getStorage().bucket();
 
-const bgsGalleryRef = db
+const BGS_GALLERY_REF = db
   .collection("Users")
   .doc(USER_DOCUMENT_ID)
   .collection("BGSs");
@@ -80,7 +80,7 @@ function getFullFormat(format, type) {
 }
 
 async function getBrandGuides(req, res) {
-  const bgsGallerySnapshot = await bgsGalleryRef.get();
+  const bgsGallerySnapshot = await BGS_GALLERY_REF.get();
   const bgsGallery = [];
 
   bgsGallerySnapshot.forEach((doc) => {
@@ -92,7 +92,7 @@ async function getBrandGuides(req, res) {
 
 async function getBrandGuide(req, res) {
   const name = req.params.name.split("%20").join(" ");
-  const bgsRef = await bgsGalleryRef.doc(name);
+  const bgsRef = await BGS_GALLERY_REF.doc(name);
   const bgsSnapshot = await bgsRef.get();
 
   const pagesSnapshot = await bgsRef.collection("Pages").get();
