@@ -26,6 +26,58 @@ const bgsGalleryRef = db
   .doc(USER_DOCUMENT_ID)
   .collection("BGSs");
 
+const ALLOWED_FORMATS = [
+  {
+    type: "font",
+    formats: {
+      otf: "opentype",
+      ttf: "truetype",
+      woff: "woff",
+      woff2: "woff2",
+    },
+  },
+  {
+    type: "image",
+    formats: {
+      jpg: "JPEG",
+      svg: "SVG",
+      png: "PNG",
+    },
+  },
+  {
+    type: "video",
+    formats: {
+      mp4: "MP4",
+      mpg: "MPEG",
+      avi: "AVI",
+      webm: "WEBM",
+    },
+  },
+  {
+    type: "audio",
+    formats: {
+      mp3: "MP3",
+      wav: "WAV",
+      ogg: "Ogg",
+    },
+  },
+];
+
+function getTypeFromFormat(format) {
+  ALLOWED_FORMATS.forEach((item) => {
+    if (format in item.formats) {
+      return item.type;
+    }
+  });
+  return "unknown";
+}
+
+function getFullFormat(format, type) {
+  const fullFormat = ALLOWED_FORMATS.filter((item) => item.type == type)[0]
+    .formats[format];
+  return fullFormat;
+}
+
 async function getBrandGuides(req, res) {
   const bgsGallerySnapshot = await bgsGalleryRef.get();
   const bgsGallery = [];
