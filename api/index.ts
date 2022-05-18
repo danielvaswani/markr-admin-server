@@ -168,7 +168,7 @@ function getFontCSS(fonts) {
         ' format("' + getFullFormat(font.content.format, "font") + '")';
       return `@font-face {
   font-family: '${font.name}';
-  src: url("${font.content.url}")${format};
+  src: url(${font.content.url})${format};
 }`;
     })
     .join("\n");
