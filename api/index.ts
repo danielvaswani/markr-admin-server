@@ -50,7 +50,7 @@ const ALLOWED_FORMATS = [
     formats: {
       mp4: "MP4",
       mpg: "MPEG",
-      avi: "AVI",
+      // avi: "AVI",
       webm: "WEBM",
     },
   },
@@ -65,12 +65,13 @@ const ALLOWED_FORMATS = [
 ];
 
 function getTypeFromFormat(format) {
+  let type = "unknown";
   ALLOWED_FORMATS.forEach((item) => {
-    if (format in item.formats) {
-      return item.type;
+    if (Object.keys(item.formats).includes(format)) {
+      type = item.type;
     }
   });
-  return "unknown";
+  return type;
 }
 
 function getFullFormat(format, type) {
@@ -90,9 +91,8 @@ async function getBrandGuides(req, res) {
   res.send(bgsGallery);
 }
 
-async function getBrandGuide(req, res) {
-  const name = req.params.name.split("%20").join(" ");
-  const bgsRef = await BGS_GALLERY_REF.doc(name);
+async function getBrandGuide(name) {
+  const bgsRef = BGS_GALLERY_REF.doc(name);
   const bgsSnapshot = await bgsRef.get();
 
   const pagesSnapshot = await bgsRef.collection("Pages").get();
@@ -103,8 +103,36 @@ async function getBrandGuide(req, res) {
   });
   const bgsData = bgsSnapshot.data();
   bgsData.pages = pages;
-  res.setHeader("Content-Type", "application/json");
-  res.send(bgsData);
+  return bgsData;
+}
+
+async function getPage(bgsName: string, pageName: string) {
+  const pageRef = BGS_GALLERY_REF.doc(bgsName)
+    .collection("Pages")
+    .doc(pageName);
+  const pageSnapshot = await pageRef.get();
+  return pageSnapshot.data();
+}
+
+async function addPageToDatabase(bgsName: string, pageName: string) {
+  const pageRef = BGS_GALLERY_REF.doc(bgsName)
+    .collection("Pages")
+    .doc(pageName);
+
+  const newPageData = {
+    name: pageName,
+    containsDefaultFont: false,
+    isCoreComponent: false,
+    Assets: [],
+  };
+
+  return db.runTransaction((transaction) => {
+    return transaction.get(pageRef).then((doc) => {
+      if (!doc.exists) {
+        transaction.create(pageRef, newPageData);
+      }
+    });
+  });
 }
 
 interface Asset {
@@ -141,6 +169,8 @@ async function addAssetToDatabase(
 
 function createBlobAsset(fileName): Asset {
   const fileNameSplit = fileName.split(".");
+  const type = getTypeFromFormat(fileNameSplit[1]);
+  console.log(type);
   return {
     content: {
       format: fileNameSplit[1],
@@ -152,7 +182,7 @@ function createBlobAsset(fileName): Asset {
         "?alt=media",
     },
     name: fileNameSplit[0],
-    type: getTypeFromFormat(fileNameSplit[1]),
+    type: type,
   };
 }
 
@@ -180,28 +210,61 @@ async function uploadFile(file) {
   bucket.file(originalName).save(blob);
 }
 
+function removeSpaces(pathName) {
+  return pathName.split("%20").join(" ");
+}
+
 app.get("/api/brandguides", async (req, res) => getBrandGuides(req, res));
 
 app.get("/api/brandguides/:name/fonts", async (req, res) => {
-  const fonts = Promise.all(await getFonts(req.params.name)).then((fonts) => {
-    const fontsCss = getFontCSS(fonts);
-    res.set("Content-Type", "text/css");
-    res.send(fontsCss);
-  });
+  const fonts = Promise.all(await getFonts(removeSpaces(req.params.name))).then(
+    (fonts) => {
+      const fontsCss = getFontCSS(fonts);
+      res.set("Content-Type", "text/css");
+      res.send(fontsCss);
+    }
+  );
 });
 
-app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
+app.get("/api/brandguides/:name", async (req, res) => {
+  res.set("Content-Type", "application/json");
+  res.send(await getBrandGuide(removeSpaces(req.params.name)));
+});
+
+app.get("/api/brandguides/:bgsName/:pageName/", async (req, res) => {
+  res.set("Content-Type", "application/json");
+  res.send(
+    await getPage(
+      removeSpaces(req.params.bgsName),
+      removeSpaces(req.params.pageName)
+    )
+  );
+});
+
+app.post("/api/brandguides/:bgsName/:pageName/", async (req, res) => {
+  addPageToDatabase(
+    removeSpaces(req.params.bgsName),
+    removeSpaces(req.params.pageName)
+  )
+    .then(() => res.sendStatus(200))
+    .catch(console.error);
+});
 
 app.post(
   "/api/brandguides/:bgsName/:pageName/upload/blob",
   multer().single("file"),
   async (req, res) => {
+    const asset = createBlobAsset(req["file"].originalname);
+    if (asset.type === "unknown") {
+      res.sendStatus(500);
+      return;
+    }
     uploadFile(req["file"])
       .then(() => {
         addAssetToDatabase(
-          req.params.bgsName,
-          req.params.pageName,
-          createBlobAsset(req["file"].originalname)
+          removeSpaces(req.params.bgsName),
+          removeSpaces(req.params.pageName),
+          asset
         )
           .then(() => res.sendStatus(200))
           // TODO DELETE FILE IN CATCH IF DB REFERENCE FAILED
@@ -212,11 +275,15 @@ app.post(
 );
 
 app.post("/api/brandguides/:bgsName/:pageName/upload/", async (req, res) => {
-  addAssetToDatabase(req.params.bgsName, req.params.pageName, {
-    content: req.body.content,
-    name: req.body.name,
-    type: req.body.type,
-  })
+  addAssetToDatabase(
+    removeSpaces(req.params.bgsName),
+    removeSpaces(req.params.pageName),
+    {
+      content: req.body.content,
+      name: req.body.name,
+      type: req.body.type,
+    }
+  )
     .then(() => res.sendStatus(200))
     .catch(console.error);
 });
