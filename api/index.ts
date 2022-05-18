@@ -106,6 +106,35 @@ async function getBrandGuide(name) {
   return bgsData;
 }
 
+async function getPage(bgsName: string, pageName: string) {
+  const pageRef = BGS_GALLERY_REF.doc(bgsName)
+    .collection("Pages")
+    .doc(pageName);
+  const pageSnapshot = await pageRef.get();
+  return pageSnapshot.data();
+}
+
+async function addPageToDatabase(bgsName: string, pageName: string) {
+  const pageRef = BGS_GALLERY_REF.doc(bgsName)
+    .collection("Pages")
+    .doc(pageName);
+
+  const newPageData = {
+    name: pageName,
+    containsDefaultFont: false,
+    isCoreComponent: false,
+    Assets: [],
+  };
+
+  return db.runTransaction((transaction) => {
+    return transaction.get(pageRef).then((doc) => {
+      if (!doc.exists) {
+        transaction.create(pageRef, newPageData);
+      }
+    });
+  });
+}
+
 interface Asset {
   content: any;
   name: string;
@@ -200,6 +229,25 @@ app.get("/api/brandguides/:name/fonts", async (req, res) => {
 app.get("/api/brandguides/:name", async (req, res) => {
   res.set("Content-Type", "application/json");
   res.send(await getBrandGuide(removeSpaces(req.params.name)));
+});
+
+app.get("/api/brandguides/:bgsName/:pageName/", async (req, res) => {
+  res.set("Content-Type", "application/json");
+  res.send(
+    await getPage(
+      removeSpaces(req.params.bgsName),
+      removeSpaces(req.params.pageName)
+    )
+  );
+});
+
+app.post("/api/brandguides/:bgsName/:pageName/", async (req, res) => {
+  addPageToDatabase(
+    removeSpaces(req.params.bgsName),
+    removeSpaces(req.params.pageName)
+  )
+    .then(() => res.sendStatus(200))
+    .catch(console.error);
 });
 
 app.post(
