@@ -50,7 +50,7 @@ const ALLOWED_FORMATS = [
     formats: {
       mp4: "MP4",
       mpg: "MPEG",
-      avi: "AVI",
+      // avi: "AVI",
       webm: "WEBM",
     },
   },
@@ -65,12 +65,13 @@ const ALLOWED_FORMATS = [
 ];
 
 function getTypeFromFormat(format) {
+  let type = "unknown";
   ALLOWED_FORMATS.forEach((item) => {
-    if (format in item.formats) {
-      return item.type;
+    if (Object.keys(item.formats).includes(format)) {
+      type = item.type;
     }
   });
-  return "unknown";
+  return type;
 }
 
 function getFullFormat(format, type) {
@@ -139,6 +140,8 @@ async function addAssetToDatabase(
 
 function createBlobAsset(fileName): Asset {
   const fileNameSplit = fileName.split(".");
+  const type = getTypeFromFormat(fileNameSplit[1]);
+  console.log(type);
   return {
     content: {
       format: fileNameSplit[1],
@@ -150,7 +153,7 @@ function createBlobAsset(fileName): Asset {
         "?alt=media",
     },
     name: fileNameSplit[0],
-    type: getTypeFromFormat(fileNameSplit[1]),
+    type: type,
   };
 }
 
@@ -202,12 +205,17 @@ app.post(
   "/api/brandguides/:bgsName/:pageName/upload/blob",
   multer().single("file"),
   async (req, res) => {
+    const asset = createBlobAsset(req["file"].originalname);
+    if (asset.type === "unknown") {
+      res.sendStatus(500);
+      return;
+    }
     uploadFile(req["file"])
       .then(() => {
         addAssetToDatabase(
           removeSpaces(req.params.bgsName),
           removeSpaces(req.params.pageName),
-          createBlobAsset(req["file"].originalname)
+          asset
         )
           .then(() => res.sendStatus(200))
           // TODO DELETE FILE IN CATCH IF DB REFERENCE FAILED
