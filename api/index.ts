@@ -92,7 +92,7 @@ async function getBrandGuides(req, res) {
 }
 
 async function getBrandGuide(name) {
-  const bgsRef = await BGS_GALLERY_REF.doc(name);
+  const bgsRef = BGS_GALLERY_REF.doc(name);
   const bgsSnapshot = await bgsRef.get();
 
   const pagesSnapshot = await bgsRef.collection("Pages").get();
@@ -198,7 +198,8 @@ app.get("/api/brandguides/:name/fonts", async (req, res) => {
 });
 
 app.get("/api/brandguides/:name", async (req, res) => {
-  res.send(getBrandGuide(removeSpaces(req.params.name)));
+  res.set("Content-Type", "application/json");
+  res.send(await getBrandGuide(removeSpaces(req.params.name)));
 });
 
 app.post(
