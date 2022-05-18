@@ -90,8 +90,7 @@ async function getBrandGuides(req, res) {
   res.send(bgsGallery);
 }
 
-async function getBrandGuide(req, res) {
-  const name = req.params.name.split("%20").join(" ");
+async function getBrandGuide(name) {
   const bgsRef = await BGS_GALLERY_REF.doc(name);
   const bgsSnapshot = await bgsRef.get();
 
@@ -103,8 +102,7 @@ async function getBrandGuide(req, res) {
   });
   const bgsData = bgsSnapshot.data();
   bgsData.pages = pages;
-  res.setHeader("Content-Type", "application/json");
-  res.send(bgsData);
+  return bgsData;
 }
 
 interface Asset {
@@ -168,7 +166,7 @@ function getFontCSS(fonts) {
         ' format("' + getFullFormat(font.content.format, "font") + '")';
       return `@font-face {
   font-family: '${font.name}';
-  src: url("${font.content.url}")${format};
+  src: url(${font.content.url})${format};
 }`;
     })
     .join("\n");
@@ -180,17 +178,25 @@ async function uploadFile(file) {
   bucket.file(originalName).save(blob);
 }
 
+function removeSpaces(pathName) {
+  return pathName.split("%20").join(" ");
+}
+
 app.get("/api/brandguides", async (req, res) => getBrandGuides(req, res));
 
 app.get("/api/brandguides/:name/fonts", async (req, res) => {
-  const fonts = Promise.all(await getFonts(req.params.name)).then((fonts) => {
-    const fontsCss = getFontCSS(fonts);
-    res.set("Content-Type", "text/css");
-    res.send(fontsCss);
-  });
+  const fonts = Promise.all(await getFonts(removeSpaces(req.params.name))).then(
+    (fonts) => {
+      const fontsCss = getFontCSS(fonts);
+      res.set("Content-Type", "text/css");
+      res.send(fontsCss);
+    }
+  );
 });
 
-app.get("/api/brandguides/:name", async (req, res) => getBrandGuide(req, res));
+app.get("/api/brandguides/:name", async (req, res) => {
+  res.send(getBrandGuide(removeSpaces(req.params.name)));
+});
 
 app.post(
   "/api/brandguides/:bgsName/:pageName/upload/blob",
@@ -199,8 +205,8 @@ app.post(
     uploadFile(req["file"])
       .then(() => {
         addAssetToDatabase(
-          req.params.bgsName,
-          req.params.pageName,
+          removeSpaces(req.params.bgsName),
+          removeSpaces(req.params.pageName),
           createBlobAsset(req["file"].originalname)
         )
           .then(() => res.sendStatus(200))
@@ -212,11 +218,15 @@ app.post(
 );
 
 app.post("/api/brandguides/:bgsName/:pageName/upload/", async (req, res) => {
-  addAssetToDatabase(req.params.bgsName, req.params.pageName, {
-    content: req.body.content,
-    name: req.body.name,
-    type: req.body.type,
-  })
+  addAssetToDatabase(
+    removeSpaces(req.params.bgsName),
+    removeSpaces(req.params.pageName),
+    {
+      content: req.body.content,
+      name: req.body.name,
+      type: req.body.type,
+    }
+  )
     .then(() => res.sendStatus(200))
     .catch(console.error);
 });
