@@ -64,6 +64,41 @@ const ALLOWED_FORMATS = [
   },
 ];
 
+enum ALLOWED_TYPES {
+  font = "font",
+  video = "video",
+  image = "image",
+  audio = "audio",
+  text = "text",
+  color = "color",
+  unknown = "unknown",
+}
+
+interface Asset {
+  content:
+    | FontAsset
+    | VideoAsset
+    | ImageAsset
+    | AudioAsset
+    | TextAsset
+    | ColorAsset;
+  name: string;
+  type: ALLOWED_TYPES;
+}
+
+interface FontAsset {
+  format: string;
+}
+interface VideoAsset {}
+interface ImageAsset {}
+interface AudioAsset {}
+interface TextAsset {}
+interface ColorAsset {}
+
+function getAllTypes() {
+  return ALLOWED_FORMATS.map((item) => item.type);
+}
+
 function getTypeFromFormat(format) {
   let type = "unknown";
   ALLOWED_FORMATS.forEach((item) => {
@@ -135,13 +170,7 @@ async function addPageToDatabase(bgsName: string, pageName: string) {
   });
 }
 
-interface Asset {
-  content: any;
-  name: string;
-  type: string;
-}
-
-async function getAssets(bgsName) {
+async function getAssets(bgsName): Promise<Asset[]> {
   const pagesRef = BGS_GALLERY_REF.doc(bgsName).collection("Pages");
   const snapshot = await pagesRef.get();
   const allAssets = [];
@@ -182,13 +211,13 @@ function createBlobAsset(fileName): Asset {
         "?alt=media",
     },
     name: fileNameSplit[0],
-    type: type,
+    type: ALLOWED_TYPES[type],
   };
 }
 
 async function getFonts(bgsName) {
   const allAssets = await getAssets(bgsName);
-  return allAssets.filter((asset) => asset.type === "font");
+  return allAssets.filter((asset) => asset.type === ALLOWED_TYPES.font);
 }
 
 function getFontCSS(fonts) {
@@ -255,7 +284,7 @@ app.post(
   multer().single("file"),
   async (req, res) => {
     const asset = createBlobAsset(req["file"].originalname);
-    if (asset.type === "unknown") {
+    if (asset.type === ALLOWED_TYPES.unknown) {
       res.sendStatus(500);
       return;
     }
