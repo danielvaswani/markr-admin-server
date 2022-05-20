@@ -75,38 +75,42 @@ enum ALLOWED_TYPES {
 }
 
 interface Asset {
-  content:
-    | FontAsset
-    | VideoAsset
-    | ImageAsset
-    | AudioAsset
-    | TextAsset
-    | ColorAsset;
+  content: FileAsset | TextAsset | ColorAsset;
   name: string;
   type: ALLOWED_TYPES;
 }
 
-interface FontAsset {
+interface FileAsset {
   format: string;
+  url: string;
 }
-interface VideoAsset {}
-interface ImageAsset {}
-interface AudioAsset {}
-interface TextAsset {}
-interface ColorAsset {}
+
+interface TextAsset {
+  fontSize: number;
+  fontName: string;
+  textContent: string;
+}
+
+interface ColorAsset {
+  red: number;
+  green: number;
+  blue: number;
+  opacity: number;
+  category: string;
+}
 
 function getAllTypes() {
   return ALLOWED_FORMATS.map((item) => item.type);
 }
 
-function getTypeFromFormat(format) {
+function getTypeFromFormat(format: string): ALLOWED_TYPES {
   let type = "unknown";
   ALLOWED_FORMATS.forEach((item) => {
     if (Object.keys(item.formats).includes(format)) {
       type = item.type;
     }
   });
-  return type;
+  return ALLOWED_TYPES[type];
 }
 
 function getFullFormat(format, type) {
