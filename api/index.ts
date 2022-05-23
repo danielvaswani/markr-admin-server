@@ -18,7 +18,7 @@ const PORT = 3000;
 const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";
 
 const app = express();
-app.use(express.json());
+// app.use(express.json());
 const db = getFirestore();
 const bucket = getStorage().bucket();
 
@@ -104,6 +104,18 @@ async function getBrandGuide(name) {
   const bgsData = bgsSnapshot.data();
   bgsData.pages = pages;
   return bgsData;
+}
+
+async function addBrandGuideToDatabase(bgsName: string) {
+  if (await hasBrandGuide(bgsName)) {
+    return false;
+  }
+  BGS_GALLERY_REF.doc(bgsName).set({ name: bgsName });
+  return true;
+}
+
+async function hasBrandGuide(bgsName) {
+  return (await BGS_GALLERY_REF.doc(bgsName).get()).exists;
 }
 
 async function getPage(bgsName: string, pageName: string) {
@@ -197,7 +209,7 @@ function getFontCSS(fonts) {
       const format =
         ' format("' + getFullFormat(font.content.format, "font") + '")';
       return `@font-face {
-  font-family: '${font.name}';
+  font-family: '${font.name.split("-").join(" ")}';
   src: url(${font.content.url})${format};
 }`;
     })
@@ -274,19 +286,30 @@ app.post(
   }
 );
 
-app.post("/api/brandguides/:bgsName/:pageName/upload/", async (req, res) => {
-  addAssetToDatabase(
-    removeSpaces(req.params.bgsName),
-    removeSpaces(req.params.pageName),
-    {
-      content: req.body.content,
-      name: req.body.name,
-      type: req.body.type,
-    }
-  )
-    .then(() => res.sendStatus(200))
-    .catch(console.error);
+app.post("/api/brandguides/:bgsName", async (req, res) => {
+  const success = await addBrandGuideToDatabase(
+    removeSpaces(req.params.bgsName)
+  );
+  res.sendStatus(success ? 200 : 400);
 });
+
+app.post(
+  "/api/brandguides/:bgsName/:pageName/upload/",
+  express.json(),
+  async (req, res) => {
+    addAssetToDatabase(
+      removeSpaces(req.params.bgsName),
+      removeSpaces(req.params.pageName),
+      {
+        content: req.body.content,
+        name: req.body.name,
+        type: req.body.type,
+      }
+    )
+      .then(() => res.sendStatus(200))
+      .catch(console.error);
+  }
+);
 
 app.listen(PORT, () => {
   return console.log(`Express is listening at http://localhost:${PORT}`);
