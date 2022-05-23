@@ -107,12 +107,10 @@ async function getBrandGuide(name) {
 }
 
 async function addBrandGuideToDatabase(bgsName: string) {
-  const bgsRef = BGS_GALLERY_REF.doc(bgsName);
-  const exists = (await bgsRef.get()).exists;
-  if (exists) {
+  if (await hasBrandGuide(bgsName)) {
     return false;
   }
-  bgsRef.set({ name: bgsName });
+  BGS_GALLERY_REF.doc(bgsName).set({ name: bgsName });
   return true;
 }
 
@@ -288,9 +286,12 @@ app.post(
   }
 );
 
-app.post("/api/brandguides/:bgsName", async (req, res) =>
-  addBrandGuideToDatabase(removeSpaces(req.params.bgsName))
+app.post("/api/brandguides/:bgsName", async (req, res) => {
+  const success = await addBrandGuideToDatabase(
+    removeSpaces(req.params.bgsName)
 );
+  res.sendStatus(success ? 200 : 400);
+});
 
 app.post(
   "/api/brandguides/:bgsName/:pageName/upload/",
