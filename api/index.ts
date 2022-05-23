@@ -289,7 +289,7 @@ app.post(
 app.post("/api/brandguides/:bgsName", async (req, res) => {
   const success = await addBrandGuideToDatabase(
     removeSpaces(req.params.bgsName)
-);
+  );
   res.sendStatus(success ? 200 : 400);
 });
 
@@ -297,17 +297,17 @@ app.post(
   "/api/brandguides/:bgsName/:pageName/upload/",
   express.json(),
   async (req, res) => {
-  addAssetToDatabase(
-    removeSpaces(req.params.bgsName),
-    removeSpaces(req.params.pageName),
-    {
-      content: req.body.content,
-      name: req.body.name,
-      type: req.body.type,
-    }
-  )
-    .then(() => res.sendStatus(200))
-    .catch(console.error);
+    addAssetToDatabase(
+      removeSpaces(req.params.bgsName),
+      removeSpaces(req.params.pageName),
+      {
+        content: req.body.content,
+        name: req.body.name,
+        type: req.body.type,
+      }
+    )
+      .then(() => res.sendStatus(200))
+      .catch(console.error);
   }
 );
 
