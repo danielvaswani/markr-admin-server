@@ -64,14 +64,53 @@ const ALLOWED_FORMATS = [
   },
 ];
 
-function getTypeFromFormat(format) {
+enum ALLOWED_TYPES {
+  font = "font",
+  video = "video",
+  image = "image",
+  audio = "audio",
+  text = "text",
+  color = "color",
+  unknown = "unknown",
+}
+
+interface Asset {
+  content: FileAsset | TextAsset | ColorAsset;
+  name: string;
+  type: ALLOWED_TYPES;
+}
+
+interface FileAsset {
+  format: string;
+  url: string;
+}
+
+interface TextAsset {
+  fontSize: number;
+  fontName: string;
+  textContent: string;
+}
+
+interface ColorAsset {
+  red: number;
+  green: number;
+  blue: number;
+  opacity: number;
+  category: string;
+}
+
+function getAllTypes() {
+  return ALLOWED_FORMATS.map((item) => item.type);
+}
+
+function getTypeFromFormat(format: string): ALLOWED_TYPES {
   let type = "unknown";
   ALLOWED_FORMATS.forEach((item) => {
     if (Object.keys(item.formats).includes(format)) {
       type = item.type;
     }
   });
-  return type;
+  return ALLOWED_TYPES[type];
 }
 
 function getFullFormat(format, type) {
@@ -147,13 +186,7 @@ async function addPageToDatabase(bgsName: string, pageName: string) {
   });
 }
 
-interface Asset {
-  content: any;
-  name: string;
-  type: string;
-}
-
-async function getAssets(bgsName) {
+async function getAssets(bgsName): Promise<Asset[]> {
   const pagesRef = BGS_GALLERY_REF.doc(bgsName).collection("Pages");
   const snapshot = await pagesRef.get();
   const allAssets = [];
@@ -194,13 +227,13 @@ function createBlobAsset(fileName): Asset {
         "?alt=media",
     },
     name: fileNameSplit[0],
-    type: type,
+    type: ALLOWED_TYPES[type],
   };
 }
 
 async function getFonts(bgsName) {
   const allAssets = await getAssets(bgsName);
-  return allAssets.filter((asset) => asset.type === "font");
+  return allAssets.filter((asset) => asset.type === ALLOWED_TYPES.font);
 }
 
 function getFontCSS(fonts) {
@@ -267,7 +300,7 @@ app.post(
   multer().single("file"),
   async (req, res) => {
     const asset = createBlobAsset(req["file"].originalname);
-    if (asset.type === "unknown") {
+    if (asset.type === ALLOWED_TYPES.unknown) {
       res.sendStatus(500);
       return;
     }
