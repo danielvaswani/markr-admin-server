@@ -209,7 +209,7 @@ function getFontCSS(fonts) {
       const format =
         ' format("' + getFullFormat(font.content.format, "font") + '")';
       return `@font-face {
-  font-family: '${font.name}';
+  font-family: '${font.name.split("-").join(" ")}';
   src: url(${font.content.url})${format};
 }`;
     })
