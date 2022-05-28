@@ -18,7 +18,7 @@ const PORT = 3000;
 const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";
 
 const app = express();
-app.use(express.json());
+// app.use(express.json());
 const db = getFirestore();
 const bucket = getStorage().bucket();
 
@@ -64,14 +64,53 @@ const ALLOWED_FORMATS = [
   },
 ];
 
-function getTypeFromFormat(format) {
+enum ALLOWED_TYPES {
+  font = "font",
+  video = "video",
+  image = "image",
+  audio = "audio",
+  text = "text",
+  color = "color",
+  unknown = "unknown",
+}
+
+interface Asset {
+  content: FileAsset | TextAsset | ColorAsset;
+  name: string;
+  type: ALLOWED_TYPES;
+}
+
+interface FileAsset {
+  format: string;
+  url: string;
+}
+
+interface TextAsset {
+  fontSize: number;
+  fontName: string;
+  textContent: string;
+}
+
+interface ColorAsset {
+  red: number;
+  green: number;
+  blue: number;
+  opacity: number;
+  category: string;
+}
+
+function getAllTypes() {
+  return ALLOWED_FORMATS.map((item) => item.type);
+}
+
+function getTypeFromFormat(format: string): ALLOWED_TYPES {
   let type = "unknown";
   ALLOWED_FORMATS.forEach((item) => {
     if (Object.keys(item.formats).includes(format)) {
       type = item.type;
     }
   });
-  return type;
+  return ALLOWED_TYPES[type];
 }
 
 function getFullFormat(format, type) {
@@ -116,6 +155,7 @@ async function getBrandGuide(name, isSubdomain) {
   return bgsData;
 }
 
+<<<<<<< HEAD
 async function getBrandGuideNameFromSubdomain(subdomain) {
   try {
     return await (
@@ -125,6 +165,18 @@ async function getBrandGuideNameFromSubdomain(subdomain) {
     console.log(error);
   }
   return "";
+=======
+async function addBrandGuideToDatabase(bgsName: string) {
+  if (await hasBrandGuide(bgsName)) {
+    return false;
+  }
+  BGS_GALLERY_REF.doc(bgsName).set({ name: bgsName });
+  return true;
+}
+
+async function hasBrandGuide(bgsName) {
+  return (await BGS_GALLERY_REF.doc(bgsName).get()).exists;
+>>>>>>> a454250a7e8cc1da471618cdd1942e98f9e9289d
 }
 
 async function getPage(bgsName: string, pageName: string) {
@@ -156,13 +208,7 @@ async function addPageToDatabase(bgsName: string, pageName: string) {
   });
 }
 
-interface Asset {
-  content: any;
-  name: string;
-  type: string;
-}
-
-async function getAssets(bgsName) {
+async function getAssets(bgsName): Promise<Asset[]> {
   const pagesRef = BGS_GALLERY_REF.doc(bgsName).collection("Pages");
   const snapshot = await pagesRef.get();
   const allAssets = [];
@@ -203,13 +249,13 @@ function createBlobAsset(fileName): Asset {
         "?alt=media",
     },
     name: fileNameSplit[0],
-    type: type,
+    type: ALLOWED_TYPES[type],
   };
 }
 
 async function getFonts(bgsName) {
   const allAssets = await getAssets(bgsName);
-  return allAssets.filter((asset) => asset.type === "font");
+  return allAssets.filter((asset) => asset.type === ALLOWED_TYPES.font);
 }
 
 function getFontCSS(fonts) {
@@ -218,7 +264,7 @@ function getFontCSS(fonts) {
       const format =
         ' format("' + getFullFormat(font.content.format, "font") + '")';
       return `@font-face {
-  font-family: '${font.name}';
+  font-family: '${font.name.split("-").join(" ")}';
   src: url(${font.content.url})${format};
 }`;
     })
@@ -283,7 +329,7 @@ app.post(
   multer().single("file"),
   async (req, res) => {
     const asset = createBlobAsset(req["file"].originalname);
-    if (asset.type === "unknown") {
+    if (asset.type === ALLOWED_TYPES.unknown) {
       res.sendStatus(500);
       return;
     }
@@ -302,19 +348,30 @@ app.post(
   }
 );
 
-app.post("/api/brandguides/:bgsName/:pageName/upload/", async (req, res) => {
-  addAssetToDatabase(
-    removeSpaces(req.params.bgsName),
-    removeSpaces(req.params.pageName),
-    {
-      content: req.body.content,
-      name: req.body.name,
-      type: req.body.type,
-    }
-  )
-    .then(() => res.sendStatus(200))
-    .catch(console.error);
+app.post("/api/brandguides/:bgsName", async (req, res) => {
+  const success = await addBrandGuideToDatabase(
+    removeSpaces(req.params.bgsName)
+  );
+  res.sendStatus(success ? 200 : 400);
 });
+
+app.post(
+  "/api/brandguides/:bgsName/:pageName/upload/",
+  express.json(),
+  async (req, res) => {
+    addAssetToDatabase(
+      removeSpaces(req.params.bgsName),
+      removeSpaces(req.params.pageName),
+      {
+        content: req.body.content,
+        name: req.body.name,
+        type: req.body.type,
+      }
+    )
+      .then(() => res.sendStatus(200))
+      .catch(console.error);
+  }
+);
 
 app.listen(PORT, () => {
   return console.log(`Express is listening at http://localhost:${PORT}`);
