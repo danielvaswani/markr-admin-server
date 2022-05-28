@@ -155,7 +155,6 @@ async function getBrandGuide(name, isSubdomain) {
   return bgsData;
 }
 
-<<<<<<< HEAD
 async function getBrandGuideNameFromSubdomain(subdomain) {
   try {
     return await (
@@ -165,7 +164,8 @@ async function getBrandGuideNameFromSubdomain(subdomain) {
     console.log(error);
   }
   return "";
-=======
+}
+
 async function addBrandGuideToDatabase(bgsName: string) {
   if (await hasBrandGuide(bgsName)) {
     return false;
@@ -176,7 +176,6 @@ async function addBrandGuideToDatabase(bgsName: string) {
 
 async function hasBrandGuide(bgsName) {
   return (await BGS_GALLERY_REF.doc(bgsName).get()).exists;
->>>>>>> a454250a7e8cc1da471618cdd1942e98f9e9289d
 }
 
 async function getPage(bgsName: string, pageName: string) {
