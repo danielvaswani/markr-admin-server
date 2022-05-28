@@ -80,19 +80,27 @@ function getFullFormat(format, type) {
   return fullFormat;
 }
 
-async function getBrandGuides(req, res) {
+async function getBrandGuides() {
   const bgsGallerySnapshot = await BGS_GALLERY_REF.get();
   const bgsGallery = [];
-
-  bgsGallerySnapshot.forEach((doc) => {
-    const data = doc.data();
-    bgsGallery.push(data);
-  });
-  res.send(bgsGallery);
+  try {
+    bgsGallerySnapshot.forEach((doc) => {
+      const data = doc.data();
+      bgsGallery.push(data);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+  return bgsGallery;
 }
 
-async function getBrandGuide(name) {
-  const bgsRef = BGS_GALLERY_REF.doc(name);
+async function getBrandGuide(name, isSubdomain) {
+  let bgsName = name;
+  if (isSubdomain) bgsName = await getBrandGuideNameFromSubdomain(name);
+
+  if (bgsName === "") return;
+
+  const bgsRef = BGS_GALLERY_REF.doc(bgsName);
   const bgsSnapshot = await bgsRef.get();
 
   const pagesSnapshot = await bgsRef.collection("Pages").get();
@@ -101,9 +109,22 @@ async function getBrandGuide(name) {
   pagesSnapshot.forEach((doc) => {
     pages.push(doc.data());
   });
-  const bgsData = bgsSnapshot.data();
+
+  console.log(JSON.parse(JSON.stringify(bgsSnapshot.data())));
+  const bgsData = JSON.parse(JSON.stringify(bgsSnapshot.data()));
   bgsData.pages = pages;
   return bgsData;
+}
+
+async function getBrandGuideNameFromSubdomain(subdomain) {
+  try {
+    return await (
+      await BGS_GALLERY_REF.where("subdomain", "==", subdomain).get()
+    ).docs[0].data().name;
+  } catch (error) {
+    console.log(error);
+  }
+  return "";
 }
 
 async function getPage(bgsName: string, pageName: string) {
@@ -214,7 +235,9 @@ function removeSpaces(pathName) {
   return pathName.split("%20").join(" ");
 }
 
-app.get("/api/brandguides", async (req, res) => getBrandGuides(req, res));
+app.get("/api/brandguides", async (req, res) =>
+  res.send(await getBrandGuides())
+);
 
 app.get("/api/brandguides/:name/fonts", async (req, res) => {
   const fonts = Promise.all(await getFonts(removeSpaces(req.params.name))).then(
@@ -227,8 +250,13 @@ app.get("/api/brandguides/:name/fonts", async (req, res) => {
 });
 
 app.get("/api/brandguides/:name", async (req, res) => {
+  const isSubdomain = req.query.subdomain === "true";
   res.set("Content-Type", "application/json");
-  res.send(await getBrandGuide(removeSpaces(req.params.name)));
+  const brandGuide = await getBrandGuide(
+    removeSpaces(req.params.name),
+    isSubdomain
+  );
+  brandGuide !== undefined ? res.send(brandGuide) : res.sendStatus(404);
 });
 
 app.get("/api/brandguides/:bgsName/:pageName/", async (req, res) => {
