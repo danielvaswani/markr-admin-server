@@ -62,6 +62,14 @@ const ALLOWED_FORMATS = [
       ogg: "Ogg",
     },
   },
+  {
+    type: "iframe",
+    formats: {
+      vimeo: "vimeo",
+      youtube: "youtube",
+      other: "other",
+    },
+  },
 ];
 
 enum ALLOWED_TYPES {
@@ -71,6 +79,7 @@ enum ALLOWED_TYPES {
   audio = "audio",
   text = "text",
   color = "color",
+  iframe = "iframe",
   unknown = "unknown",
 }
 
