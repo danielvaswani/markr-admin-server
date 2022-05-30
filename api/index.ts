@@ -285,6 +285,7 @@ app.get("/api/brandguides", async (req, res) =>
 );
 
 app.get("/api/brandguides/:name/fonts", async (req, res) => {
+  const format = req.query.format;
   const fonts = Promise.all(await getFonts(removeSpaces(req.params.name))).then(
     (fonts) => {
       const fontsCss = getFontCSS(fonts);
