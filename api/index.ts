@@ -70,6 +70,13 @@ const ALLOWED_FORMATS = [
       other: "other",
     },
   },
+  {
+    type: "text",
+    formats: {
+      subtitle: "subtitle",
+      paragraph: "paragraph",
+    },
+  },
 ];
 
 enum ALLOWED_TYPES {
@@ -105,7 +112,6 @@ interface ColorAsset {
   green: number;
   blue: number;
   opacity: number;
-  category: string;
 }
 
 function getAllTypes() {
@@ -365,7 +371,7 @@ app.post("/api/brandguides/:bgsName", async (req, res) => {
 });
 
 app.post(
-  "/api/brandguides/:bgsName/:pageName/upload/",
+  "/api/brandguides/:bgsName/:pageName/upload",
   express.json(),
   async (req, res) => {
     addAssetToDatabase(
@@ -381,6 +387,63 @@ app.post(
       .catch(console.error);
   }
 );
+
+// app.put("/api/brandguides/:bgsName", async (req, res) => {
+//   const bgsName = req.params.bgsName;
+//   const field = req.query.field;
+//   const toValue = req.query.toValue;
+//   updateBrandGuideField(bgsName, field, toValue);
+// });
+
+// function updateBrandGuideField(
+//   bgsName: string,
+//   field: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[],
+//   toValue: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[]
+// ) {
+//   // if name is in update, get old index and data, add new doc with new doc id and name, changeName()
+//   // if index get item in other index first, maybe changeIndex()
+//   throw new Error("Function not implemented.");
+// }
+
+// app.put("/api/brandguides/:bgsName/:pageName", async (req, res) => {
+//   const bgsName = req.params.bgsName;
+//   const pageName = req.params.pageName;
+//   const field = req.query.field;
+//   const toValue = req.query.toValue;
+//   updatePageField(bgsName, pageName, field, toValue);
+// });
+
+// function updatePageField(
+//   bgsName: string,
+//   pageName: string,
+//   field: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[],
+//   toValue: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[]
+// ) {
+//   // if name is in update, get old index and data, add new doc with new doc id and name, changeName()
+//   // if index get item in other index first, maybe changeIndex()
+//   throw new Error("Function not implemented.");
+// }
+
+// app.put("/api/brandguides/:bgsName/:pageName/:assetIndex", async (req, res) => {
+//   const bgsName = req.params.bgsName;
+//   const pageName = req.params.pageName;
+//   const assetIndex = req.params.assetIndex;
+
+//   updateAsset(bgsName, pageName, assetIndex);
+// });
+
+// function updateAsset(bgsName: string, pageName: string, assetIndex: string) {
+//   throw new Error("Function not implemented.");
+// }
+
+// app.delete("/api/brandguides/:bgsName", async (req, res) => {});
+
+// app.delete("/api/brandguides/:bgsName/:pageName", async (req, res) => {});
+
+// app.delete(
+//   "/api/brandguides/:bgsName/:pageName/:assetIndex",
+//   async (req, res) => {}
+// );
 
 app.listen(PORT, () => {
   return console.log(`Express is listening at http://localhost:${PORT}`);
