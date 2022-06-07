@@ -187,10 +187,10 @@ async function getBrandGuideNameFromSubdomain(subdomain) {
 
 async function addBrandGuideToDatabase(bgsName: string) {
   if (await hasBrandGuide(bgsName)) {
-    return false;
+    return;
   }
-  BGS_GALLERY_REF.doc(bgsName).set({ name: bgsName });
-  return true;
+  await BGS_GALLERY_REF.doc(bgsName).set({ name: bgsName });
+  return getBrandGuide(bgsName, false);
 }
 
 async function hasBrandGuide(bgsName) {
@@ -373,10 +373,14 @@ app.post(
 );
 
 app.post("/api/brandguides/:bgsName", async (req, res) => {
-  const success = await addBrandGuideToDatabase(
+  const response = await addBrandGuideToDatabase(
     removeSpaces(req.params.bgsName)
   );
-  res.sendStatus(success ? 200 : 400);
+  if (response) {
+    res.send(response);
+  } else {
+    res.sendStatus(403);
+  }
 });
 
 app.post(
