@@ -107,6 +107,10 @@ interface TextAsset {
   textContent: string;
 }
 
+interface ColorPaletteAsset {
+  colors: ColorAsset[];
+}
+
 interface ColorAsset {
   red: number;
   green: number;
@@ -255,16 +259,21 @@ function createBlobAsset(fileName): Asset {
   return {
     content: {
       format: fileNameSplit[1],
-      url:
-        "https://firebasestorage.googleapis.com/v0/b/" +
-        process.env.STORAGE_BUCKET +
-        "/o/" +
-        fileName +
-        "?alt=media",
+      url: getStorageURL(fileName),
     },
     name: fileNameSplit[0],
     type: ALLOWED_TYPES[type],
   };
+}
+
+function getStorageURL(fileName: string): string {
+  return (
+    "https://firebasestorage.googleapis.com/v0/b/" +
+    process.env.STORAGE_BUCKET +
+    "/o/" +
+    fileName +
+    "?alt=media"
+  );
 }
 
 async function getFonts(bgsName) {
@@ -388,53 +397,114 @@ app.post(
   }
 );
 
-// app.put("/api/brandguides/:bgsName", async (req, res) => {
-//   const bgsName = req.params.bgsName;
-//   const field = req.query.field;
-//   const toValue = req.query.toValue;
-//   updateBrandGuideField(bgsName, field, toValue);
-// });
+app.put("/api/brandguides/:bgsName", async (req, res) => {
+  const bgsName = req.params.bgsName;
+  const field = req.query.field;
+  const toValue = req.query.toValue;
+  updateBrandGuideField(bgsName, field, toValue);
+  res.sendStatus(200);
+});
 
-// function updateBrandGuideField(
-//   bgsName: string,
-//   field: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[],
-//   toValue: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[]
-// ) {
-//   // if name is in update, get old index and data, add new doc with new doc id and name, changeName()
-//   // if index get item in other index first, maybe changeIndex()
-//   throw new Error("Function not implemented.");
-// }
+function updateBrandGuideField(
+  bgsName: string,
+  field: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[],
+  toValue: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[]
+) {
+  // if name is in update, get old index and data, add new doc with new doc id and name, changeName()
+  // if index get item in other index first, maybe changeIndex()
+  const bgsRef = BGS_GALLERY_REF.doc(bgsName);
+  const updateObject = {};
+  updateObject[field.toString()] = toValue;
+  bgsRef.update(updateObject);
+}
 
-// app.put("/api/brandguides/:bgsName/:pageName", async (req, res) => {
-//   const bgsName = req.params.bgsName;
-//   const pageName = req.params.pageName;
-//   const field = req.query.field;
-//   const toValue = req.query.toValue;
-//   updatePageField(bgsName, pageName, field, toValue);
-// });
+function updateBrandGuideImage(bgsName: string, image: any) {
+  // upload file with uploadFile
+  // add ref to db with updateBrandGuideField
+  console.log(`type of image is ${typeof image}`);
+  console.log(image);
+  uploadFile(image).then(() => {
+    updateBrandGuideField(
+      bgsName,
+      "imageUrl",
+      getStorageURL(image.originalname)
+    );
+  });
+}
 
-// function updatePageField(
-//   bgsName: string,
-//   pageName: string,
-//   field: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[],
-//   toValue: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[]
-// ) {
-//   // if name is in update, get old index and data, add new doc with new doc id and name, changeName()
-//   // if index get item in other index first, maybe changeIndex()
-//   throw new Error("Function not implemented.");
-// }
+app.put(
+  "/api/brandguides/:bgsName/upload",
+  multer().single("file"),
+  async (req, res) => {
+    updateBrandGuideImage(removeSpaces(req.params.bgsName), req["file"]);
+    res.sendStatus(200);
+  }
+);
 
-// app.put("/api/brandguides/:bgsName/:pageName/:assetIndex", async (req, res) => {
-//   const bgsName = req.params.bgsName;
-//   const pageName = req.params.pageName;
-//   const assetIndex = req.params.assetIndex;
+app.put("/api/brandguides/:bgsName/:pageName", async (req, res) => {
+  const bgsName = req.params.bgsName;
+  const pageName = req.params.pageName;
+  const field = req.query.field;
+  const toValue = req.query.toValue;
+  updatePageField(bgsName, pageName, field, toValue);
+  res.sendStatus(200);
+});
 
-//   updateAsset(bgsName, pageName, assetIndex);
-// });
+function updatePageField(
+  bgsName: string,
+  pageName: string,
+  field: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[],
+  toValue: string | import("qs").ParsedQs | string[] | import("qs").ParsedQs[]
+) {
+  // if name is in update, get old index and data, add new doc with new doc id and name, changeName()
+  // if index get item in other index first, maybe changeIndex()
+  const pageRef = BGS_GALLERY_REF.doc(bgsName)
+    .collection("Pages")
+    .doc(pageName);
+  const updateObject = {};
+  updateObject[field.toString()] = toValue;
+  pageRef.update(updateObject);
+}
 
-// function updateAsset(bgsName: string, pageName: string, assetIndex: string) {
-//   throw new Error("Function not implemented.");
-// }
+app.put("/api/brandguides/:bgsName/:pageName/:assetIndex", async (req, res) => {
+  const bgsName = req.params.bgsName;
+  const pageName = req.params.pageName;
+  const assetIndex = req.params.assetIndex;
+  const asset = req.body;
+  try {
+    updateAsset(
+      removeSpaces(bgsName),
+      removeSpaces(pageName),
+      assetIndex,
+      asset
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    res.sendStatus(403);
+  }
+});
+
+async function updateAsset(
+  bgsName: string,
+  pageName: string,
+  assetIndex: string,
+  body: Asset
+) {
+  const pageRef = BGS_GALLERY_REF.doc(bgsName)
+    .collection("Pages")
+    .doc(pageName);
+  const doc = await pageRef.get();
+  if (!doc.exists) {
+    return;
+  }
+
+  let assets = await doc.data().Assets;
+  assets[assetIndex] = body;
+
+  const res = await pageRef.update({
+    Assets: assets,
+  });
+}
 
 // app.delete("/api/brandguides/:bgsName", async (req, res) => {});
 
