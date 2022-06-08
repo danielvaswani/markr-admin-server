@@ -14,7 +14,7 @@ const firebaseApp = initializeApp({
   storageBucket: process.env.STORAGE_BUCKET,
 });
 
-const PORT = 3000;
+const PORT = 3001;
 const USER_DOCUMENT_ID = "XI3pHNcWUMDUuDcGlBpA";
 
 const app = express();
@@ -185,11 +185,11 @@ async function getBrandGuideNameFromSubdomain(subdomain) {
   return "";
 }
 
-async function addBrandGuideToDatabase(bgsName: string) {
+async function addBrandGuideToDatabase(bgsName: string, body: any) {
   if (await hasBrandGuide(bgsName)) {
     return;
   }
-  await BGS_GALLERY_REF.doc(bgsName).set({ name: bgsName });
+  await BGS_GALLERY_REF.doc(bgsName).set(body);
   return getBrandGuide(bgsName, false);
 }
 
@@ -321,12 +321,22 @@ app.get("/api/brandguides/:name/fonts", async (req, res) => {
 
 app.get("/api/brandguides/:name", async (req, res) => {
   const isSubdomain = req.query.subdomain === "true";
-  res.set("Content-Type", "application/json");
-  const brandGuide = await getBrandGuide(
-    removeSpaces(req.params.name),
-    isSubdomain
-  );
-  brandGuide !== undefined ? res.send(brandGuide) : res.sendStatus(404);
+  const nodata = req.query.nodata === "true";
+  if (isSubdomain && nodata) {
+    res.sendStatus(
+      (await getBrandGuideNameFromSubdomain(removeSpaces(req.params.name))) ===
+        ""
+        ? 404
+        : 200
+    );
+  } else {
+    res.set("Content-Type", "application/json");
+    const brandGuide = await getBrandGuide(
+      removeSpaces(req.params.name),
+      isSubdomain
+    );
+    brandGuide !== undefined ? res.send(brandGuide) : res.sendStatus(404);
+  }
 });
 
 app.get("/api/brandguides/:bgsName/:pageName/", async (req, res) => {
@@ -372,9 +382,10 @@ app.post(
   }
 );
 
-app.post("/api/brandguides/:bgsName", async (req, res) => {
+app.post("/api/brandguides/:bgsName", express.json(), async (req, res) => {
   const response = await addBrandGuideToDatabase(
-    removeSpaces(req.params.bgsName)
+    removeSpaces(req.params.bgsName),
+    req.body
   );
   if (response) {
     res.send(response);
