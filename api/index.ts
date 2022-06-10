@@ -99,6 +99,7 @@ interface Asset {
 interface FileAsset {
   format: string;
   url: string;
+  variant?: string;
 }
 
 interface TextAsset {
@@ -149,6 +150,9 @@ async function getBrandGuides() {
   } catch (error) {
     console.log(error);
   }
+  bgsGallery.sort((bgs1, bgs2) =>
+    bgs1.name > bgs2.name ? 1 : bgs2.name > bgs1.name ? -1 : 0
+  );
   return bgsGallery;
 }
 
@@ -231,8 +235,12 @@ async function getAssets(bgsName): Promise<Asset[]> {
   const snapshot = await pagesRef.get();
   const allAssets = [];
   snapshot.forEach((doc) => {
-    console.log(doc.id, "=>", doc.data().Assets);
-    allAssets.push(...doc.data().Assets);
+    const data = doc.data();
+    console.log(doc.id, "=>", data.Assets);
+    let assetData = [...data.Assets];
+    const pageName = data.name;
+    assetData.forEach((item) => Object.assign(item, pageName));
+    allAssets.push(assetData);
   });
   return allAssets;
 }
@@ -277,8 +285,9 @@ function getStorageURL(fileName: string): string {
 }
 
 async function getFonts(bgsName) {
-  const allAssets = await getAssets(bgsName);
-  return allAssets.filter((asset) => asset.type === ALLOWED_TYPES.font);
+  // const allAssets = await getAssets(bgsName);
+  // return allAssets.filter((asset) => asset.type === ALLOWED_TYPES.font);
+  const bgsRef = (await BGS_GALLERY_REF.doc(bgsName).get()).data().fonts;
 }
 
 function getFontCSS(fonts) {
@@ -310,13 +319,11 @@ app.get("/api/brandguides", async (req, res) =>
 
 app.get("/api/brandguides/:name/fonts", async (req, res) => {
   const format = req.query.format;
-  const fonts = Promise.all(await getFonts(removeSpaces(req.params.name))).then(
-    (fonts) => {
-      const fontsCss = getFontCSS(fonts);
-      res.set("Content-Type", "text/css");
-      res.send(fontsCss);
-    }
-  );
+  const fonts = await getFonts(removeSpaces(req.params.name)).then((fonts) => {
+    const fontsCss = getFontCSS(fonts);
+    res.set("Content-Type", "text/css");
+    res.send(fontsCss);
+  });
 });
 
 app.get("/api/brandguides/:name", async (req, res) => {
@@ -381,6 +388,46 @@ app.post(
       .catch(console.error);
   }
 );
+
+app.post(
+  "/api/brandguides/:bgsName/:pageName/upload/image",
+  multer().single("file"),
+  async (req, res) => {
+    const variant = req.query.variant;
+    const asset = createImageAsset(req["file"].originalname, variant);
+    if (asset.type === ALLOWED_TYPES.unknown) {
+      res.sendStatus(500);
+      return;
+    }
+    uploadFile(req["file"])
+      .then(() => {
+        addAssetToDatabase(
+          removeSpaces(req.params.bgsName),
+          removeSpaces(req.params.pageName),
+          asset
+        )
+          .then(() => res.sendStatus(200))
+          // TODO DELETE FILE IN CATCH IF DB REFERENCE FAILED
+          .catch(console.error);
+      })
+      .catch(console.error);
+  }
+);
+
+function createImageAsset(fileName, variant): Asset {
+  const fileNameSplit = fileName.split(".");
+  const type = getTypeFromFormat(fileNameSplit[1]);
+  console.log(type);
+  return {
+    content: {
+      variant: variant,
+      format: fileNameSplit[1],
+      url: getStorageURL(fileName),
+    },
+    name: fileNameSplit[0],
+    type: ALLOWED_TYPES[type],
+  };
+}
 
 app.post("/api/brandguides/:bgsName", express.json(), async (req, res) => {
   const response = await addBrandGuideToDatabase(
