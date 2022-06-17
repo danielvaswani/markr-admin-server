@@ -287,7 +287,9 @@ function getStorageURL(fileName: string): string {
 async function getFonts(bgsName) {
   // const allAssets = await getAssets(bgsName);
   // return allAssets.filter((asset) => asset.type === ALLOWED_TYPES.font);
-  const bgsRef = (await BGS_GALLERY_REF.doc(bgsName).get()).data().fonts;
+  // const bgsRef = (await BGS_GALLERY_REF.doc(bgsName).get()).data().fonts;
+  const allAssets = await getAssets(bgsName);
+  return allAssets.filter((asset) => asset.type === "font");
 }
 
 function getFontCSS(fonts) {
