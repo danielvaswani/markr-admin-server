@@ -86,9 +86,9 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
 
     If succeeded it returns a 200 OK, it will fail and give a vercel error of "FUNCTION PAYLOAD TOO LARGE" if the file is over 5MB
     
-## Add/Update a Brand Guide field 
+## Add/Update a Brand Guide System field 
 
-`POST api/brandguides/:bgsName?field=:fieldName&value=:value`
+`PUT api/brandguides/:bgsName?field=:fieldName&value=:value`
 
 ### Request params
 
@@ -97,6 +97,44 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
 ### Response
 
     If succeeded it returns a 200 OK
+    
+## Add/Update a Page field from a Brand Guide System 
+
+`PUT api/brandguides/:bgsName/:pageName?field=:fieldName&value=:value`
+
+### Request params
+
+    :fieldName (I.E. containsDefaultFont, isCoreComponent, name) and :value (the string value you want to update/add to)
+    
+### Response
+
+    If succeeded it returns a 200 OK
+    
+## Upload an Image Asset to a page
+
+`POST /api/brandguides/:bgsName/:pageName/upload/image`
+
+
+### Request 
+
+    Accepts formdata, name should be "file" and value field should be the file you want to upload.
+    
+### Response 
+
+    If succeeded it returns a 200 OK, it will fail and give a vercel error of "FUNCTION PAYLOAD TOO LARGE" if the file is over 5MB
+    
+## Upload other file asset to a page (I.E. fonts and videos)
+
+`POST /api/brandguides/:bgsName/:pageName/upload/blob`
+
+
+### Request 
+
+    Accepts formdata, name should be "file" and value field should be the file you want to upload.
+    
+### Response 
+
+    If succeeded it returns a 200 OK, it will fail and give a vercel error of "FUNCTION PAYLOAD TOO LARGE" if the file is over 5MB
     
 ## Create and Add a Page to a Brand Guide System
 
@@ -118,6 +156,40 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
       Assets: [],
     }
     ```
+## Get a single Page of a Brand Guide System
+
+### Request
+
+`GET /api/brandguides/:bgsName/:pageName`
+
+### Response 
+
+```json
+
+{
+    "Assets": [
+        {
+            "content": {
+                "value": "'Oswald', sans-serif",
+                "variant": "subtitle"
+            },
+            "name": "text7",
+            "type": "text"
+        },
+        {
+            "content": {
+                "value": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.                              Ut enim ad minim veniam, qui",
+                "variant": "paragraph"
+            },
+            "name": "text8",
+            "type": "text"
+        }
+        ],
+        "containsDefaultFont": false,
+        "name": "Typography",
+        "isCoreComponent": false
+}
+```
 
 ## Get all data of a Brand Guide System
 
@@ -127,53 +199,114 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
 
 ### Response
 
-    HTTP/1.1 201 Created
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 201 Created
-    Connection: close
-    Content-Type: application/json
-    Location: /thing/2
-    Content-Length: 35
+```json
+{
+    "imageUrl": "https://mir-s3-cdn-cf.behance.net/project_modules/disp/0cd84925304975.56343b9c7bf1c.jpg",
+    "subdomain": "johnniewalker",
+    "name": "Johnnie Walker",
+    "pages": [
+        {
+            "containsDefaultFont": false,
+            "name": "About",
+            "Assets": [
+                {
+                    "type": "text",
+                    "name": "text1",
+                    "content": {
+                        "value": "Johnnie Walker wh...",
+                        "variant": "paragraph"
+                    }
+                },
+            ],
+            "isCoreComponent": false
+        },
+        {
+            "name": "Colors",
+            "Assets": [
+                {
+                    "type": "color",
+                    "name": "Primary Colors",
+                    "content": {
+                        "colors": [
+                            {
+                                "name": "SuperWhite",
+                                "blue": 255,
+                                "red": 255,
+                                "green": 255
+                            },
+                            {
+                                "name": "Light Grayish Yellow",
+                                "green": 246,
+```
 
-    {"id":2,"name":"Bar","status":null}
-
-## Get list of Things again
+## Get availability of a subdomain
 
 ### Request
 
-`GET /thing/`
-
-    curl -i -H 'Accept: application/json' http://localhost:7000/thing/
+`GET /api/brandguides/:bgsName?subdomain=true&nodata=true`
 
 ### Response
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 74
+    if succeeded it returns a 200 OK, Otherwise a 404 Not Found
 
-    [{"id":1,"name":"Foo","status":"new"},{"id":2,"name":"Bar","status":null}]
-
-## Change a Thing's state
+## Get all data for a Brand Guide System by subdomain (for markr-displayed-bgs)
 
 ### Request
 
-`PUT /thing/:id/status/changed`
-
-    curl -i -H 'Accept: application/json' -X PUT http://localhost:7000/thing/1/status/changed
+`GET /api/brandguides/:bgsName?subdomain=true`
 
 ### Response
 
-    HTTP/1.1 200 OK
-    Date: Thu, 24 Feb 2011 12:36:31 GMT
-    Status: 200 OK
-    Connection: close
-    Content-Type: application/json
-    Content-Length: 40
+```json
+{
+    "imageUrl": "https://mir-s3-cdn-cf.behance.net/project_modules/disp/0cd84925304975.56343b9c7bf1c.jpg",
+    "subdomain": "johnniewalker",
+    "name": "Johnnie Walker",
+    "pages": [
+        {
+            "containsDefaultFont": false,
+            "name": "About",
+            "Assets": [
+                {
+                    "type": "text",
+                    "name": "text1",
+                    "content": {
+                        "value": "Johnnie Walker wh...",
+                        "variant": "paragraph"
+                    }
+                },
+            ],
+            "isCoreComponent": false
+        },
+        {
+            "name": "Colors",
+            "Assets": [
+                {
+                    "type": "color",
+                    "name": "Primary Colors",
+                    "content": {
+                        "colors": [
+                            {
+                                "name": "SuperWhite",
+                                "blue": 255,
+                                "red": 255,
+                                "green": 255
+                            },
+                            {
+                                "name": "Light Grayish Yellow",
+                                "green": 246,
+```
 
-    {"id":1,"name":"Foo","status":"changed"}
+
+### Get Font CSS for a Brand Guide System
+
+`GET /api/brandguides/:bgsName/fonts`
+
+
+
+### Response
+
+    
 
 ## Get changed Thing
 
