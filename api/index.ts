@@ -3,7 +3,12 @@ import multer from "multer";
 import "dotenv/config";
 
 import { applicationDefault, cert, initializeApp } from "firebase-admin/app";
-import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
+import {
+  getFirestore,
+  Timestamp,
+  FieldValue,
+  CollectionGroup,
+} from "firebase-admin/firestore";
 import admin from "firebase-admin";
 // import { uploadBytes, ref } from "firebase/storage";
 import { getStorage } from "firebase-admin/storage";
@@ -238,9 +243,7 @@ async function getAssets(bgsName): Promise<Asset[]> {
     const data = doc.data();
     console.log(doc.id, "=>", data.Assets);
     let assetData = [...data.Assets];
-    const pageName = data.name;
-    assetData.forEach((item) => Object.assign(item, pageName));
-    allAssets.push(assetData);
+    allAssets.push(...assetData);
   });
   return allAssets;
 }
@@ -289,6 +292,7 @@ async function getFonts(bgsName) {
   // return allAssets.filter((asset) => asset.type === ALLOWED_TYPES.font);
   // const bgsRef = (await BGS_GALLERY_REF.doc(bgsName).get()).data().fonts;
   const allAssets = await getAssets(bgsName);
+  console.log(allAssets);
   return allAssets.filter((asset) => asset.type === "font");
 }
 
@@ -322,6 +326,9 @@ app.get("/api/brandguides", async (req, res) =>
 app.get("/api/brandguides/:name/fonts", async (req, res) => {
   const format = req.query.format;
   const fonts = await getFonts(removeSpaces(req.params.name)).then((fonts) => {
+    console.log("------------------------------------------------");
+    console.log(fonts);
+    console.log("------------------------------------------------");
     const fontsCss = getFontCSS(fonts);
     res.set("Content-Type", "text/css");
     res.send(fontsCss);
