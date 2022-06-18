@@ -150,9 +150,9 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
     
 ```json
     {
-      name: pageName,
-      containsDefaultFont: false,
-      isCoreComponent: false,
+      "name": "Typography",
+      "containsDefaultFont": false,
+      "isCoreComponent": false,
       Assets: [],
     }
 ```
@@ -327,12 +327,12 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
 
 ```json
 {
-  content: {
-    variant: "subtitle",
-    value: "The quick brown fox jumps over the lazy dog"
+  "content": {
+    "variant": "subtitle",
+    "value": "The quick brown fox jumps over the lazy dog"
   },
-  name: "text1",
-  type: "text"
+  "name": "text1",
+  "type": "text"
 }
 ```
     All asset types need a content: any, name: String, and type: String
