@@ -4,9 +4,9 @@ REST API Documentation example taken from https://github.com/bbc/REST-API-exampl
 
 The entire application is contained within the `index.ts` file.
 
-`vercel.json` is a config file to allow Vercel to host an express app as a serverless function.
+All routes are contained on one file due to Vercel requirements when using express js. If it is possible, a solution could not be found on their documentation. 
 
-X
+`vercel.json` is a config file to allow Vercel to host an express app as a serverless function.
 
 ## Install
 
@@ -148,14 +148,14 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
     
     It initializes a page with an object body like below
     
-    ```json
+```json
     {
       name: pageName,
       containsDefaultFont: false,
       isCoreComponent: false,
       Assets: [],
     }
-    ```
+```
 ## Get a single Page of a Brand Guide System
 
 ### Request
@@ -304,18 +304,18 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
 
 ### Response
 
-    ```css
+```css
     
-    @font-face {
-      font-family: 'Gilroy ExtraBold';
-      src: url(https://firebasestorage.googleapis.com/v0/b/markr-7d6ab.appspot.com/o/Gilroy-ExtraBold.otf?alt=media) format("opentype");
-    }
-    @font-face {
-      font-family: 'Gilroy Light';
-      src: url(https://firebasestorage.googleapis.com/v0/b/markr-7d6ab.appspot.com/o/Gilroy-Light.otf?alt=media) format("opentype");
-    }
+@font-face {
+  font-family: 'Gilroy ExtraBold';
+  src: url(https://firebasestorage.googleapis.com/v0/b/markr-7d6ab.appspot.com/o/Gilroy-ExtraBold.otf?alt=media) format("opentype");
+  }
+@font-face {
+  font-family: 'Gilroy Light';
+  src: url(https://firebasestorage.googleapis.com/v0/b/markr-7d6ab.appspot.com/o/Gilroy-Light.otf?alt=media) format("opentype");
+  }
     
-    ```
+```
 
 ## Update an asset in a Page of a Brand Guide System by its index on the page
 
@@ -325,14 +325,14 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
 
 ### Request body
 
-    ```json
-    content: {
-        variant: "subtitle",
-        value: "The quick brown fox jumps over the lazy dog"
-    },
-    name: "text1",
-    type: "text"
-    ```
+```json
+content: {
+  variant: "subtitle",
+  value: "The quick brown fox jumps over the lazy dog"
+  },
+name: "text1",
+type: "text"
+```
     All asset types need a content: any, name: String, and type: String
 ### Response
     
