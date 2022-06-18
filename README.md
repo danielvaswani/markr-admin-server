@@ -326,12 +326,14 @@ DISCLAIMER: FILES UPLOADED ABOVE 5MB WILL FAIL
 ### Request body
 
 ```json
-content: {
-  variant: "subtitle",
-  value: "The quick brown fox jumps over the lazy dog"
+{
+  content: {
+    variant: "subtitle",
+    value: "The quick brown fox jumps over the lazy dog"
   },
-name: "text1",
-type: "text"
+  name: "text1",
+  type: "text"
+}
 ```
     All asset types need a content: any, name: String, and type: String
 ### Response
